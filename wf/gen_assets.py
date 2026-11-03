@@ -40,9 +40,9 @@ WEEK_CN = "一二三四五六日"
 W, H = 336, 480
 CLOCK_Y = 34            # 大号时间
 DATE_Y = 126            # 日期行
-CARD1_Y = 190           # 第一节课卡片
-CARD2_Y = 320           # 第二节课卡片
-CARD_X, CARD_W, CARD_H = 18, 300, 124
+CARD1_Y = 186           # 第一节课卡片
+CARD2_Y = 328           # 第二节课卡片（和第一张留 10px 间距）
+CARD_X, CARD_W, CARD_H = 18, 300, 132
 
 
 def font(weight, size):
@@ -99,21 +99,21 @@ def make_glyphs():
 
     # 日期用的小数字（17px）
     for c in "0123456789":
-        im, w, h = glyph(c, "medium", 20, INK2, pad=1)
+        im, w, h = glyph(c, "medium", 26, INK2, pad=1)
         widths[f"d{c}"] = save(im, os.path.join(OUT_IMG, f"d{c}.png"))
 
     # 汉字与符号
     for key, txt, size in [
-        ("y", "年", 20), ("mo", "月", 20), ("dd", "日", 20), ("wk", "周", 20),
-        ("di", "第", 16),
-        ("dot", "·", 20),
-        ("p_morning", "上午", 20), ("p_afternoon", "下午", 20), ("p_evening", "晚上", 20),
+        ("y", "年", 26), ("mo", "月", 26), ("dd", "日", 26), ("wk", "周", 26),
+        ("di", "第", 22),
+        ("dot", "·", 14),
+        ("p_morning", "上午", 26), ("p_afternoon", "下午", 26), ("p_evening", "晚上", 26),
     ]:
         im, w, h = glyph(txt, "medium", size, INK3, pad=1)
         widths[key] = save(im, os.path.join(OUT_IMG, f"{key}.png"))
 
     for i, c in enumerate(WEEK_CN, 1):
-        im, w, h = glyph(c, "medium", 20, INK2, pad=1)
+        im, w, h = glyph(c, "medium", 26, INK2, pad=1)
         widths[f"w{i}"] = save(im, os.path.join(OUT_IMG, f"w{i}.png"))
 
     # 时间分隔符（日期行用的小斜杠，画在数字之间）
@@ -122,7 +122,7 @@ def make_glyphs():
 
 def wrap_name(d, name, maxw_px):
     """按宽度贪心折行：先 31px 一行，不行就 26/24 两行，再不行 22/20 三行，最后截断"""
-    for size, max_lines in ((31, 1), (26, 2), (24, 2), (22, 3), (20, 3)):
+    for size, max_lines in ((34, 1), (29, 2), (26, 2), (24, 3), (22, 3)):
         f = font("bold", size)
         if d.textlength(name, font=f) / S <= maxw_px:
             return [name], size
@@ -138,7 +138,7 @@ def wrap_name(d, name, maxw_px):
             lines.append(cur)
         if len(lines) <= max_lines:
             return lines, size
-    f = font("bold", 20)
+    f = font("bold", 22)
     lines, cur = [], ""
     for ch in name:
         if d.textlength(cur + ch, font=f) / S <= maxw_px:
@@ -193,8 +193,8 @@ def card_png(course, highlight, path, color):
 def empty_png(label, path):
     im, d = new(CARD_W, 120)
     d.rounded_rectangle([0, 0, CARD_W * S - 1, 119 * S], radius=13 * S, fill=CARD)
-    d.text((CARD_W * S // 2, 48 * S), label, font=font("bold", 24), fill=INK2, anchor="mm")
-    d.text((CARD_W * S // 2, 82 * S), "好好休息", font=font("regular", 15), fill=INK3, anchor="mm")
+    d.text((CARD_W * S // 2, 50 * S), label, font=font("bold", 27), fill=INK2, anchor="mm")
+    d.text((CARD_W * S // 2, 88 * S), "好好休息", font=font("regular", 16), fill=INK3, anchor="mm")
     return save(im, path)
 
 

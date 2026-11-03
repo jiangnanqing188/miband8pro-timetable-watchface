@@ -22,7 +22,15 @@ W, H = 336, 480
 import re
 LUA = open(os.path.join(ROOT, "wf", "app", "lua", "data.lua"), encoding="utf-8").read()
 WID = {k: int(v) for k, v in re.findall(r'\["(\w+)"\] = (\d+)', LUA)}
-LAYOUT = dict(clock_y=34, date_y=126, card1_y=190, card2_y=320, card_x=18)
+# 从 data.lua 读坐标，别再写死（表盘用的是它，预览也必须一致）
+_m = re.search(r"M\.LAYOUT = \{([^}]*)\}", LUA, re.S)
+LAYOUT = {}
+if _m:
+    for k, v in re.findall(r"(\w+)\s*=\s*(-?\d+)", _m.group(1)):
+        LAYOUT[k] = int(v)
+LAYOUT.setdefault("clock_y", 34); LAYOUT.setdefault("date_y", 126)
+LAYOUT.setdefault("card1_y", 190); LAYOUT.setdefault("card2_y", 328)
+LAYOUT.setdefault("card_x", 18)
 
 COURSES = []
 for m in re.finditer(r'\{ day=(\d+), from=(\d+), to=(\d+), normal="([^"]+)", hi="([^"]+)", '

@@ -31,7 +31,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 WEEK_CN = ["一", "二", "三", "四", "五", "六", "日"]
 
 # 一天三个时段：7 点换上午，12 点换下午，18 点换晚上
-PHASES = [("morning", "上午", "07:00"), ("afternoon", "下午", "12:00"),
+PHASES = [("morning", "上午", "00:00"), ("afternoon", "下午", "12:00"),
           ("evening", "晚上", "18:00")]
 
 
