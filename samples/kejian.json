@@ -1,0 +1,8 @@
+{
+  "semester": "2026-2027 秋",
+  "courses": [
+    {"name": "线性代数", "weekday": 2, "periods": [3, 4], "weeks": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16], "room": "教三-105", "teacher": "张伟"},
+    {"name": "计算机网络", "weekday": "周五", "periods": "1-2", "weeks": "1-16", "room": "计科楼 502", "teacher": "何静"},
+    {"name": "体育", "weekday": 3, "periods": [7,8], "weeks": "1-16", "room": "体育馆"}
+  ]
+}

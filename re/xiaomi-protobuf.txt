@@ -1,0 +1,87 @@
+Xiaomi protobuf watches ¶
+The following list includes all implemented features for Xiaomi protobuf devices. These are called protobuf devices because they use protobuf for the protocol, unlike other Huami devices. The actual supported features can vary for each device.
+Support for most of these devices is still experimental. This page is also still a work in progress and not complete.
+List of supported Xiaomi gadgets by Gadgetbridge which use protobuf:
+Xiaomi Mi Band 10 Xiaomi Mi Band 10 Pro
+Xiaomi Mi Band 11 Active
+Xiaomi Mi Band 8 Xiaomi Mi Band 8 Active
+Xiaomi Mi Band 9 Xiaomi Mi Band 9 Active
+Xiaomi Mi Watch Color Sport
+Xiaomi Redmi Smart Band 2
+Xiaomi Redmi Smart Band 3
+Xiaomi Redmi Smart Band Pro
+Xiaomi Redmi Watch 2 Lite
+Xiaomi Redmi Watch 3 Active
+Xiaomi Redmi Watch 5 Xiaomi Redmi Watch 5 Active
+Xiaomi Redmi Watch 5 Lite Xiaomi Redmi Watch 6 Xiaomi Redmi Watch Move Xiaomi Watch 5
+Xiaomi Watch S1 Active
+Xiaomi Watch S4 Xiaomi Watch S5
+Implemented features ¶
+These features are supported by Gadgetbridge and apply to all Xiaomi watch models included in this page. Note that actual available features per device depends on the device capabilities.
+List of features supported by Gadgetbridge
+Authentication / Encryption
+Set time (date, time, timezone offset, dst offset, 12h/24h)
+Device info (firmware, model, serial)
+Device state (battery, sleep, wearing)
+Music (info, state, media buttons from watch)
+Apps, calls, custom icons, open on phone, dismiss on phone and watch
+Ignore and reject calls
+Reject calls with SMS
+Configure canned messages for calls
+Alarm clock alerts (a notification is shown on the watch when a phone alarm rings, and dismissed when it stops)
+Navigation instructions, sent as notifications
+Contacts upload to watch (Redmi Watch 3, 3 Active, 4, 5, 5 Active, 5 Lite, 6 and Move)
+World clocks (Redmi Watch 4, 5, 6 and Move)
+Flashing (watchface, firmware, rpk)
+Watchface and app management
+Start fitness app on phone
+Activity sync (partial, see below)
+Wearing Mode (band / pebble / necklace)
+User Info (height, weight, birthday, gender)
+Goals (calories, steps, standing time, active time)
+Goal notification (enabled, secondary goal)
+Vitality score settings (7 day reminder, daily reminder)
+Heart rate (sleep detection, sleep breathing quality, sleep breathing rate, interval, high and low alerts, irregular heart rhythm alert)
+SpO2 (all-day or during sleep, low alert)
+Stress (enable, relaxation reminder)
+Standing reminder (start and end times, dnd period)
+Screen on on notifications
+Vibration patterns (experimental)
+Realtime stats (steps, heart rate)
+Weather (multiple locations)
+Phone silent mode from watch
+Activity sync is experimental, and may present issues on some devices.
+Vitality Score (equivalent to PAI)
+Sleep times and sleep stages
+Skin temperature (Watch S1 Pro)
+Workout activity data from DETAILS files : heart rate, cadence / stroke rate, speed, steps and SpO2 for treadmill, indoor and outdoor cycling, rowing (per-interval laps with stroke counts), elliptical and walking. This data can be exported as FIT (see Auto export ).
+Heart rate stats (resting, min, max, average)
+SpO2 stats (min, max, average)
+Body temperature (Watch S1 Pro)
+Standing time (fetched, but no UI)
+Sleep respiratory rate
+Some workout DETAILS layouts are unsupported (e.g. Mi Band 8 walking); these fall back to a GPS/GPX-only track with no per-record metrics
+To add support, export the raw files: open the workout in Gadgetbridge, then overflow ( ) menu → Dev Tools → Share Raw Summary and Share Raw Details .
+Raw files can contain private data (outdoor workouts include your GPS track). Don't post them publicly — open an issue for the workout type and send the files privately via Matrix .
+Do not forget to check any other open issues in the project repository.
+Wearing mode must be changed at least once from the watch for the preference to show in Gadgetbridge
+A toast about an error syncing calendar database sometimes appears
+Sleep stages do not work for all devices
+Workout does not get a GPS signal on some watches
+Try to increase the "Send GPS timeout" in the device settings, under the "Workout" submenu. If you are still facing issues, please open an issue or reach out on Matrix .
+Change the app layout
+Raise to wake sensitivity and schedule
+Firmware parsing (they can be installed, but must be set in the code)
+Send phone alarms to watch
+3rd party realtime heart rate access is not support, even with the vendor app. This means that other apps such as OpenTracks will not be able to use these devices for heart rate measurement
+Multiple connection types ¶
+Some Xiaomi devices support both Bluetooth LE and Classic, depending on the firmware version. Right now, Gadgetbridge is unable to determine which connection type the device supports, so pairing or connecting to the device might fail.
+If you face any issues during pairing or connecting, please attempt the following steps:
+Pair the device in Android Bluetooth settings
+In Gadgetbridge, go to the Debug menu
+Click "Add test device manually"
+Select the device type and input the mac address
+Click the button on the device card
+Go to the "Authentication" page, set the auth key
+Go to the "Connection" page, and try to force the connection type to "Bluetooth Classic"
+Connecting to the device should now work. If you are still facing issues, please open an issue or reach out on Matrix .

@@ -1,0 +1,119 @@
+Huami/Xiaomi server pairing ¶
+List of gadgets that this page applies to & requires server pairing
+Amazfit Active Amazfit Active 2 Amazfit Active 3 Premium Amazfit Active Edge
+Amazfit Active Max Amazfit Balance Amazfit Balance 2 Amazfit Balance 2 XT Amazfit Balance 3 Amazfit Balance Ultra
+Amazfit Band 5 Amazfit Band 7 Amazfit Bip 3 Amazfit Bip 3 Pro Amazfit Bip 5 Amazfit Bip 5 Unity Amazfit Bip 6 Amazfit Bip Lite Amazfit Bip Max Amazfit Bip S Amazfit Bip S Lite Amazfit Bip U Amazfit Bip U Pro Amazfit Cheetah Amazfit Cheetah 2 Pro
+Amazfit Cheetah Pro Amazfit Cor Amazfit Cor 2 Amazfit Falcon Amazfit GTR Amazfit GTR 2 Amazfit GTR 3 Amazfit GTR 3 Pro Amazfit GTR 4 Amazfit GTR Lite Amazfit GTR Mini Amazfit GTS Amazfit GTS 2 Amazfit GTS 2 Mini Amazfit GTS 3 Amazfit GTS 4 Amazfit GTS 4 Mini Amazfit GTS 4 Mini New Amazfit Helio Ring
+Amazfit Neo Amazfit T-Rex 2 Amazfit T-Rex 3
+Amazfit T-Rex 3 Pro Amazfit T-Rex Ultra Amazfit T-Rex Ultra 2
+Amazfit Verge Lite Amazfit X Xiaomi Mi Band 4 Xiaomi Mi Band 5 Xiaomi Mi Band 6
+Roidmi F8 Storm Xiaomi Mi Band 10 Xiaomi Mi Band 10 Pro
+Xiaomi Mi Band 8 Xiaomi Mi Band 8 Active
+Xiaomi Mi Band 9 Xiaomi Mi Band 9 Active
+Xiaomi Mi Watch Color Sport
+Xiaomi Redmi Smart Band Pro
+Xiaomi Redmi Watch 3 Active
+Xiaomi Redmi Watch 5 Xiaomi Redmi Watch 5 Active
+Xiaomi Redmi Watch 5 Lite Xiaomi Redmi Watch 6 Xiaomi Redmi Watch Move Xiaomi Watch 5
+Xiaomi Watch S4 Xiaomi Watch S5
+New Amazfit and Xiaomi gadgets, as well as older gadgets with updated firmware, require server-based pairing. This means you must use the correct official app to perform the initial pairing, which pushes the authentication token to the backend. After pairing, you can retrieve the pairing key and use it to pair with Gadgetbridge. On some older devices, if the auth token is not present in the backend, you may need to try one of the other supported apps.
+The naming of these apps can be confusing. For a detailed overview, see the App naming overview section below.
+Usage of non-free (as-in freedom) software ahead
+Unfortunately, these steps will take you outside of Gadgetbridge and require you to create an account with your gadget's vendor's website and/or download a proprietary app.
+As the authentication keys are stored on vendor servers, there is no way to generate these keys locally at the moment.
+The authentication key is stored on Huami servers or in the original Mi Fit / Mi Fitness / Xiaomi Wear / Zepp app's database. There are several ways to obtain the key.
+Older Mi Bands (up to Mi Band 7 non-Pro), Mi Scales
+com.huami.watch.hmwatchmanager
+Newer Mi Bands (Mi Band 7 Pro, 8, 8 Active, 8 Pro, 9, 9 Active, 9 Pro, 10, 10 Pro, 11), Xiaomi and Redmi watches
+It has been reported in that for some earlier Mi Bands the "Zepp Life" app won't push the auth token to backend however it does work with the "Zepp" app even though those devices are not officially supported in that app.
+Older devices without encryption ¶
+Some old Xiaomi devices use the Xiaomi account ID as authentication key. For these, you can just use the numeric account ID, as seen in the official app next to the account name. Enter it exactly as shown, without the 0x prefix: it is a decimal number, not a hexadecimal key. These devices are:
+If you have one of these devices and already got your numeric account ID, skip to the "Entering key" section.
+But for gadgets requiring a key, choose only one method from below to learn how to obtain your own encryption key:
+This method only works if you paired your gadget with Zepp app, since it only retrieves tokens saved in Zepp servers.
+When you log into your Zepp account online, your account token gets stored in the browser, which then can be used to retrieve your gadgets.
+Sign into Watchface Maker with the same account your gadget is currently linked to.
+Press Ctrl + Shift + I to open browser console, or if it didn't work, right-click anywhere in the page and choose "Inspect" option, and then open "Console" tab by yourself.
+Copy and paste this JavaScript snippet and hit Enter to execute it in the webpage, and allow for pop-ups if asked.
+const zeppCookie = document . cookie . match ( "hm-user-login-info=(.*?);" ) ? .[ 1 ] ? . replaceAll ( "%2C" , "," );
+userCredentials = JSON . parse ( decodeURI ( zeppCookie ))[ "token_info" ];
+'user_id' : document . cookie . match ( "userid=(.*?);" ) ? .[ 1 ] ? . replaceAll ( "%2C" , "," ),
+'app_token' : document . cookie . match ( "apptoken=(.*?);" ) ? .[ 1 ] ? . replaceAll ( "%2C" , "," )
+if ( ! userCredentials . user_id ) {
+throw new Error ( "Account was not found, make sure you've currently visiting and signed in https://watchface.zepp.com/" );
+console . log ( "Your user credentials is:" );
+console . log ( userCredentials );
+const userId = userCredentials [ "user_id" ];
+console . log ( "User ID:" , userId );
+fetch ( `https://api-mifit-us3.zepp.com/users/ ${ userId } /devices` + "?" + new URLSearchParams ({
+"appid" : "2882303761517383915" , "channel" : "play" , "enableMultiDevice" : "true" , "device_type" : "android_phone" ,
+"cv" : "151262_8.7.1-play" , "device" : "android_33" , "v" : "2.0" , "lang" : "en_US" , "country" : "US"
+}), { method : "GET" , headers : {
+"User-Agent" : "Zepp/8.5.3-play (2201116SG; Android 12; Density/2.525)" ,
+"apptoken" : userCredentials [ "app_token" ],
+"channel" : "play" , "appname" : "com.huami.midong" , "appplatform" : "android_phone" ,
+"cv" : "151262_8.7.1-play" , "v" : "2.0" , "lang" : "en_US" , "country" : "US" ,
+"hm-privacy-diagnostics" : "false" , "hm-privacy-ceip" : "true"
+}}). then (( x ) => x . json ()). then (( d ) => {
+const linkedDevices = d [ "items" ];
+if ( ! linkedDevices . length ) { throw new Error ( "There is no device found linked to this account." ) }
+const devicesData = new Blob ([ JSON . stringify ( linkedDevices )], { type : "application/json" });
+if ( ! window . open ( URL . createObjectURL ( devicesData ))) { console . log ( "Listing linked devices below:" ); console . log ( linkedDevices ); }
+} catch ( e ){ alert ( `An error is detected.\n ${ e } \n\nIf this script doesn't work, make sure to report this issue and try another browser or other methods.` )}})();
+Then it should print another message to the console or pop up a new tab containing the data returned from Zepp servers. From there, you can find your hexadecimal auth_key value located inside additionalInfo object.
+additionalInfo: {"sn":"12345/ABCDEFGHIJKLMN","bind_timezone":12,"auth_key":"b0f9c10d025c6b7333bf21f3a701e5fc","productId":"103","productVersion":"259","hardwareVersion":"0.91.18.5","brand type":-1,"lastDevicePAIDataSyncTime":1000000000000}
+So in this case, the auth key for this device would be b0f9c10d025c6b7333bf21f3a701e5fc .
+After obtaining your key, keep it and jump to the "Entering key" section to continue.
+Install Zepp Life or Zepp vendor app depending which app supports your gadget. Then create your account and pair your gadget. After that, quit the vendor app (don't uninstall it yet), and run the appropriate command for your gadget in a root shell. (e.g. Termux for on-device, or ADB for on-computer)
+Replace [YOURDBNAMEHERE] with the name of the database file of vendor app. You can use a file explorer to get the name of the database file name.
+Zepp Life Zepp (formerly Amazfit) Mi Fitness (Xiaomi Wear)
+sqlite3 /data/data/com.xiaomi.hm.health/databases/origin_db_[YOURDBNAMEHERE] "select AUTHKEY from DEVICE"
+sqlite3 /data/data/com.huami.watch.hmwatchmanager/databases/origin_db_[YOURDBNAMEHERE] "select AUTHKEY from DEVICE"
+sqlite3 /data/data/com.xiaomi.wearable/databases/device_db "select detail from device"
+Within the obtained JSON, the attribute auth_key contains the key. Note that the key name might be different for some devices not manufactured by Huami, such as encrypt_key as explained in comment on issue #3146 .
+After obtaining your key, keep it and jump to the "Entering key" section to continue.
+This section only applies to devices manufactured by Huami.
+Some devices like the Mi Band 7 are supported by multiple apps. In order for the following projects to get the auth key, you need to find the app which pushed the auth token to the backend, see App naming overview.
+The full process is not covered here, but you can try these projects to obtain the authentication key from Huami servers by logging into your Xiaomi or Amazfit account.
+Mi Fitness / Mi Health / Xiaomi Wear ¶
+This section applies to the following apps:
+Mi Fitness - com.xiaomi.wearable
+Xiaomi Wear - com.xiaomi.wearable
+If your device is supported by one of these apps, there are reports that they print the auth key in the logs ( issue #2991 ), which are available in the phone's internal storage. Accessing the logs does not require root and the path to the relevant file is /sdcard/Android/data/<package_name>/files/log/<log_file> , where:
+The package name depends on the app you have installed (see above)
+The log file can be different for each app version ( XiaomiFit.device.log , XiaomiFit.main.log Transfer.device.log , etc)
+The key can be displayed in multiple fields depending on the app. The following fields are known to contain the auth key in the logs:
+Multiple keys in the log file
+There can be multiple keys in the log file, so make sure to use the last one that shows up, closest to the end of te file. If that does not work, you can then try the others.
+You can access this file in multiple ways:
+adb shell - If you have enabled USB debugging on your mobile device, you can obtain the key from logs on your device with adb shell
+mtp - you should be able to connect the phone to a computer and access the folder from the internal storage, using the computer's file manager
+termux - You can also use Termux on the device, if you can access /sdcard/Android/data/com.xiaomi.wearable/files/log/XiaomiFit.device.log . It seems that some custom ROMs allow it, but not all stock ROMs (for example, the Pixel's does not allow it).
+The following command can be used to search for all possible fields, across all possible apps and log files:
+grep -Eo '(encryptKey|token|authKey|huamiAuthKey)[":= ]+[[:xdigit:]]{32}' /sdcard/Android/data/ { com.xiaomi.wearable,com.mi.health } /files/log/*.log | grep -oE '[[:xdigit:]]{32}' | sort | uniq
+There is a report that getting the authentication key fails in some cases. See this issue for more details.
+After obtaining your key, keep it and jump to the "Entering key" section to continue.
+Xiaomi Cloud Tokens Extractor ¶
+For Xiaomi devices that use Mi Fitness / Mi Health / Xiaomi Wear, the following project is able to connect to the Xiaomi cloud and retrieve the auth key for all associated BLE devices:
+Xiaomi Cloud Tokens Extractor
+Don't unpair from vendor app
+Anytime you unpair your gadget from Mi Fit / Amazfit / Zepp the pairing key will be invalidated and you must follow these steps again to grab the newly generated key. Just uninstall the vendor app.
+Hard resetting the gadget invalidates the key
+Every time you hard reset the gadget, the Bluetooth MAC address will be changed and you must grab a new key.
+Before entering the key and attempting to connect, you should remove all permissions from the vendor app or uninstall it, since it can conflict with Gadgetbridge. Do not unpair the watch from the vendor app , as that will invalidate the auth key.
+If you are currently on the "Device discovery" page, long press on the device name and click on "Auth key" to enter the value you've obtained previously.
+If you added the gadget already, touch the icon under your gadget name (while on the home screen) to go to the "Device specific settings", open the " Authentication " menu, and click on "Auth key" to enter the key.
+Enter your key prefixed with 0x ( e.g. if your key is 46fec12c98382dgf enter 0x46fec12c98382dgf ). Don't press Enter/Return key on the keyboard and make sure 0x is really 0x before pressing "OK", as some keyboards might use different symbols.
+If you have one of the older devices without encryption , enter your numeric account ID as it is, without 0x .
+After entering your authentication key, try connecting to your gadget to see if it is working.
+If everything works alright, congratulations! Now you can uninstall the vendor app of your gadget and start using Gadgetbridge.
+If you encounter problems with Bluetooth discovery or pairing process, try the following steps:
+Make sure to have first paired in Mi Fit / Amazfit / Zepp vendor app.
+Make sure these vendor apps is not running at the moment.
+Make sure you did not unpair your gadget from vendor app.
+Make sure to add 0x in from your key when pasting/typing it to Gadgetbridge (except for the numeric account ID of older devices without encryption ).
+Make sure 0x is really 0 (zero) and x (lowercase X), since some keyboards might use different symbols, see comment on issue #1775 .
+Do not press Enter/Return key when typing the key, which may cause adding a new line.
+Make sure that gadget is unpaired from the phone's Bluetooth.
+Toggle Bluetooth OFF and ON.
+Reboot your gadget (More → Settings → Reboot).

@@ -1,0 +1,31 @@
+# ---------- 私人数据（绝不公开）----------
+config/timetable.json
+config/_backup.json
+config/*.backup.json
+config/*.final.json
+config/*.real-backup.json
+.dsh-uploads/
+import_tmp/
+
+# ---------- 第三方二进制 / 大文件 ----------
+install/venv/
+install/*.apk
+install/token_extractor/
+re/*
+!re/*.md
+!re/*.txt
+wf/node_modules/
+wf/.npmcache/
+wf/build/
+wf/images/
+wf/*.png
+out/
+*.jpg
+
+# ---------- 通用 ----------
+__pycache__/
+*.pyc
+.DS_Store
+
+# 由课表生成，不含真实数据
+wf/app/lua/data.lua

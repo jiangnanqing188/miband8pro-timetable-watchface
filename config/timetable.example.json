@@ -1,0 +1,119 @@
+{
+  "_说明": "示例课表。复制成 config/timetable.json 再改，或者直接用面板导入 .ics",
+  "meta": {
+    "school": "示例大学",
+    "semester": "2026-2027 第1学期",
+    "semester_start": "2026-09-07",
+    "current_week": 1,
+    "timezone": "Asia/Shanghai",
+    "sample_data": true
+  },
+  "periods": [
+    {
+      "no": 1,
+      "start": "08:00",
+      "end": "09:35"
+    },
+    {
+      "no": 2,
+      "start": "10:05",
+      "end": "11:40"
+    },
+    {
+      "no": 3,
+      "start": "14:00",
+      "end": "15:35"
+    },
+    {
+      "no": 4,
+      "start": "16:05",
+      "end": "17:40"
+    },
+    {
+      "no": 5,
+      "start": "19:00",
+      "end": "20:35"
+    },
+    {
+      "no": 6,
+      "start": "21:05",
+      "end": "22:40"
+    }
+  ],
+  "courses": [
+    {
+      "name": "高等数学",
+      "weekday": 1,
+      "periods": [
+        1
+      ],
+      "weeks": "1-16",
+      "room": "教三-201",
+      "teacher": "张老师"
+    },
+    {
+      "name": "大学英语",
+      "weekday": 1,
+      "periods": [
+        2
+      ],
+      "weeks": "1-16",
+      "room": "外语楼 305"
+    },
+    {
+      "name": "数据结构",
+      "weekday": 2,
+      "periods": [
+        1
+      ],
+      "weeks": "1-16",
+      "room": "计科楼 402"
+    },
+    {
+      "name": "线性代数",
+      "weekday": 2,
+      "periods": [
+        3
+      ],
+      "weeks": "1-16",
+      "room": "教三-105"
+    },
+    {
+      "name": "大学物理",
+      "weekday": 3,
+      "periods": [
+        1
+      ],
+      "weeks": "2-17",
+      "room": "理科楼 501"
+    },
+    {
+      "name": "操作系统实验",
+      "weekday": 4,
+      "periods": [
+        5,
+        6
+      ],
+      "weeks": "10-12",
+      "room": "机房A"
+    },
+    {
+      "name": "体育（羽毛球）",
+      "weekday": 5,
+      "periods": [
+        2
+      ],
+      "weeks": "1,3,5,7,9,11,13,15",
+      "room": "体育馆"
+    },
+    {
+      "name": "通识讲座",
+      "weekday": 6,
+      "periods": [
+        2
+      ],
+      "weeks": "3-17",
+      "room": "东16-A-213"
+    }
+  ]
+}
