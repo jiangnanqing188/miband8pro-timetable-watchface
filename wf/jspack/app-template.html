@@ -441,6 +441,26 @@ async function buildFace() {
 }
 
 function download(bytes, filename) {
+  // 装在手机 App 里时，走原生桥：直接写进系统「下载」目录
+  const bridge = window.KebiaoApp;
+  if (bridge && typeof bridge.saveFile === 'function') {
+    let bin = '';
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+    }
+    const res = bridge.saveFile(btoa(bin), filename);
+    if (typeof res === 'string' && res.indexOf('OK:') === 0) {
+      const parts = res.split(':');
+      $('#msg').innerHTML = '<span class="done">✓ 已保存到 <b>' + parts[1] + '</b>（' +
+        Math.round(Number(parts[2]) / 1024) + ' KB）<br>' +
+        '用 Gadgetbridge 打开它 → Install</span>';
+    } else {
+      $('#msg').textContent = '保存失败：' + res;
+    }
+    return;
+  }
+  // 浏览器里：走普通下载
   const blob = new Blob([bytes], { type: 'application/octet-stream' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);

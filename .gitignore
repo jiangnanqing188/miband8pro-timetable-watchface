@@ -33,3 +33,8 @@ wf/app/lua/data.lua
 # npm 测试依赖（本地装即可，见 README）
 wf/package.json
 wf/package-lock.json
+
+# Android 工具链与构建中间产物
+tools-sdk/
+android/build/
+android/assets/index.html
