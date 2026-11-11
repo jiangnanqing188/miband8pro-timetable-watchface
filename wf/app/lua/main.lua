@@ -193,8 +193,8 @@ local function draw_date(y, mo, d, wd, phase_key)
     seq[#seq + 1] = { key = "dd" }
     seq[#seq + 1] = { key = "wk" }
     seq[#seq + 1] = { key = "w" .. wd }
-    seq[#seq + 1] = { key = "dot" }
-    seq[#seq + 1] = { key = phase_key }
+    seq[#seq + 1] = { key = "sp" }
+    seq[#seq + 1] = { key = phase_key }   -- 不再画「·」：两位月日时会顶到屏幕边
 
     local flat, total = {}, 0
     for _, it in ipairs(seq) do

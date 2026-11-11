@@ -79,7 +79,7 @@ def draw(canvas, y, mo, d, wd, hh, mm, phase_key, phase, now_min, week=WEEK):
     seq += ["mo"]
     for ch in str(d):
         seq.append("d" + ch)
-    seq += ["dd", "wk", f"w{wd}", "dot", phase_key]
+    seq += ["dd", "wk", f"w{wd}", "sp", phase_key]
     total = sum(WID.get(k, 0) for k in seq)
     x = (W - total) // 2
     for k in seq:

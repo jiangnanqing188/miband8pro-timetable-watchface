@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>课表表盘 · 手机生成</title>
+<style>
+:root{color-scheme:dark;--bg:#000;--sf:#101317;--sf2:#171B20;--ln:#20242A;
+ --ink:#F4F6FA;--ink2:#8E949E;--ink3:#5A606B;--ac:#5B8CFF;--ok:#4ED0A6;--bad:#FF6B81}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);padding:22px 16px 90px;
+ font:15px/1.55 system-ui,-apple-system,"PingFang SC","Noto Sans SC",sans-serif;
+ font-variant-numeric:tabular-nums}
+.wrap{max-width:560px;margin:0 auto}
+h1{margin:0 0 4px;font-size:22px;font-weight:600}
+.sub{margin:0 0 20px;color:var(--ink2);font-size:13px}
+.card{background:var(--sf);border-radius:14px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 12px;font-size:13px;font-weight:500;color:var(--ink3)}
+label{display:block;font-size:13px;color:var(--ink2);margin-bottom:6px}
+input,select{font:inherit;font-size:16px;color:var(--ink);background:var(--sf2);
+ border:1px solid var(--ln);border-radius:9px;height:44px;padding:0 12px;width:100%}
+input:focus,select:focus{outline:2px solid var(--ac);outline-offset:-1px;border-color:transparent}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.weekline{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink2)}
+.weekline b{color:var(--ac);font-size:17px}
+button{font:inherit;color:inherit;background:var(--sf2);border:0;border-radius:10px;
+ height:46px;padding:0 16px;cursor:pointer}
+button:active{transform:scale(.985)}
+button.pri{background:var(--ac);color:#fff;font-weight:600;width:100%;font-size:16px}
+button.sm{height:32px;font-size:13px;padding:0 10px;color:var(--ink2)}
+button.del{background:none;color:var(--ink3);height:32px;padding:0 6px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--ink3);font-weight:500;font-size:11.5px;padding:0 5px 6px}
+td{padding:4px 5px;border-top:1px solid var(--ln)}
+td input,td select{height:38px;font-size:14px;padding:0 7px}
+.log{margin:12px 0 0;background:#0A0C0F;border-radius:10px;padding:12px;font-size:12px;
+ line-height:1.5;color:var(--ink2);white-space:pre-wrap;max-height:220px;overflow:auto;display:none}
+.hint{color:var(--ink3);font-size:12.5px;margin-top:10px;line-height:1.55}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+ background:linear-gradient(180deg,rgba(0,0,0,0),#000 40%);}
+.bar .inner{max-width:560px;margin:0 auto;display:flex;gap:10px}
+.done{color:var(--ok)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>课表表盘</h1>
+  <p class="sub">在手机上改课表 → 生成表盘文件 → 用 Gadgetbridge 装上</p>
+
+  <div class="card">
+    <h2>学期</h2>
+    <label>开学日期（那天所在周算第 1 周）</label>
+    <input type="date" id="semesterStart">
+    <div class="weekline">今天是第 <b id="curWeek">—</b> 周（<span id="todayLabel"></span>）</div>
+    <p class="hint">表盘会自己按这个日期推算周次，所以只设一次就行；换学期再改。</p>
+  </div>
+
+  <div class="card">
+    <h2>作息时间（每天几节）</h2>
+    <table><tbody id="periods"></tbody></table>
+    <div style="margin-top:10px"><button class="sm" id="addPeriod">+ 加一节</button></div>
+  </div>
+
+  <div class="card">
+    <h2>课程（<span id="n">0</span> 门）</h2>
+    <table><thead><tr>
+      <th style="width:30%">课程名</th><th style="width:22%">教室</th>
+      <th style="width:16%">星期</th><th style="width:14%">节次</th><th style="width:18%">周次</th><th></th>
+    </tr></thead><tbody id="rows"></tbody></table>
+    <div style="margin-top:12px;display:flex;gap:10px">
+      <button class="sm" id="addCourse">+ 加一门</button>
+      <button class="sm" id="fillAll">周次全填 1-16</button>
+      <button class="sm" id="exportCfg">导出课表</button>
+      <button class="sm" id="importCfg">导入课表</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>预览</h2>
+    <img id="pv" style="width:100%;border-radius:16px;background:#000;display:block" alt="预览">
+    <p class="hint">这只是效果预览；手环上时间会实时走。</p>
+  </div>
+
+  <input type="file" id="cfgFile" accept=".json" hidden>
+  <pre class="log" id="log"></pre>
+  <p class="hint" id="msg"></p>
+</div>
+
+<div class="bar"><div class="inner">
+  <button class="pri" id="gen">生成表盘文件（.face）</button>
+</div></div>
+
+<script>/*__FACEPACK__*/</script>
+<script>/*__TIMETABLE__*/</script>
+<script>
+/* 表盘逻辑：原样来自 wf/app/lua/main.lua，打包时内联在数据前面 */
+const LUA_LOGIC = __LUA_LOGIC__;
+
+const FONT = '"Noto Sans SC","PingFang SC","Noto Sans CJK SC","WenQuanYi Micro Hei",sans-serif';
+const W = 336, H = 480;
+const LAYOUT = { clockY: 34, dateY: 126, card1Y: 186, card2Y: 328, cardX: 18, cardW: 300, cardH: 132 };
+const INK = '#F4F6FA', INK2 = '#8E949E', INK3 = '#5A606B';
+const CARD = '#101317', CARD_HI = '#1B2028', EDGE = '#1F2329';
+const WEEK_CN = '一二三四五六日';
+
+const state = load() || {
+  semesterStart: todayISO(),
+  periods: [
+    { no: 1, start: '08:00', end: '09:35' }, { no: 2, start: '10:05', end: '11:40' },
+    { no: 3, start: '14:00', end: '15:35' }, { no: 4, start: '16:05', end: '17:40' },
+    { no: 5, start: '19:00', end: '20:35' }, { no: 6, start: '21:05', end: '22:40' },
+  ],
+  courses: [],
+};
+
+function $(s) { return document.querySelector(s); }
+function todayISO() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+let storageOK = true;
+function save() {
+  try { localStorage.setItem('kebiao-face-v1', JSON.stringify(state)); }
+  catch (e) {
+    if (storageOK) {
+      storageOK = false;
+      $('#msg').innerHTML = '<span style="color:#FF6B81">⚠ 这个浏览器不允许本地存储，' +
+        '刷新页面课表会丢。填完请先点「导出课表」存一份。</span>';
+    }
+  }
+}
+function load() {
+  try { return JSON.parse(localStorage.getItem('kebiao-face-v1')); } catch (e) { return null; }
+}
+
+/* ---------------- 表单渲染 ---------------- */
+function renderForms() {
+  $('#semesterStart').value = state.semesterStart;
+  const w = Timetable.weekOf(state.semesterStart, new Date());
+  $('#curWeek').textContent = w;
+  const d = new Date();
+  $('#todayLabel').textContent = `${d.getMonth() + 1}月${d.getDate()}日 周${WEEK_CN[(d.getDay() + 6) % 7]}`;
+
+  $('#periods').innerHTML = state.periods.map((p, i) => `
+    <tr>
+      <td style="width:34px;color:var(--ink3);font-size:12px">${p.no}</td>
+      <td><input type="time" value="${p.start}" onchange="setPeriod(${i},'start',this.value)"></td>
+      <td><input type="time" value="${p.end}" onchange="setPeriod(${i},'end',this.value)"></td>
+      <td style="width:40px"><button class="del" onclick="delPeriod(${i})">删</button></td>
+    </tr>`).join('');
+
+  $('#rows').innerHTML = state.courses.map((c, i) => `
+    <tr>
+      <td><input value="${esc(c.name)}" oninput="setCourse(${i},'name',this.value)"></td>
+      <td><input value="${esc(c.room || '')}" oninput="setCourse(${i},'room',this.value)"></td>
+      <td><select onchange="setCourse(${i},'weekday',+this.value)">
+        ${WEEK_CN.split('').map((w, j) => `<option value="${j + 1}" ${c.weekday === j + 1 ? 'selected' : ''}>周${w}</option>`).join('')}
+      </select></td>
+      <td><input value="${c.periods.join('-')}" oninput="setCourse(${i},'periods',this.value)"></td>
+      <td><input value="${esc(c.weeks || '1-16')}" oninput="setCourse(${i},'weeks',this.value)"></td>
+      <td style="width:34px"><button class="del" onclick="delCourse(${i})">删</button></td>
+    </tr>`).join('');
+  $('#n').textContent = state.courses.length;
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function setPeriod(i, k, v) { state.periods[i][k] = v; save(); }
+function delPeriod(i) { if (state.periods.length <= 1) return; state.periods.splice(i, 1); state.periods.forEach((p, n) => p.no = n + 1); save(); renderForms(); }
+function setCourse(i, k, v) {
+  if (k === 'periods') {
+    const nums = String(v).split(/[^0-9]+/).filter(Boolean).map(Number);
+    v = nums.length >= 2
+      ? Array.from({ length: Math.abs(nums[1] - nums[0]) + 1 }, (_, x) => Math.min(nums[0], nums[1]) + x)
+      : (nums.length ? [nums[0]] : [1]);
+  }
+  state.courses[i][k] = v; save();
+}
+function delCourse(i) { state.courses.splice(i, 1); save(); renderForms(); }
+
+/* ---------------- 画图 ---------------- */
+function canvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h));
+  return c;
+}
+function ctxOf(c) {
+  const x = c.getContext('2d');
+  x.textBaseline = 'alphabetic';
+  x.textAlign = 'left';
+  return x;
+}
+/** 把文字渲染成紧凑 PNG，返回 {bytes, width, height} */
+function glyphPNG(text, weight, size, color, pad) {
+  pad = pad || 0;
+  const probe = ctxOf(canvas(8, 8));
+  probe.font = `${weight} ${size}px ${FONT}`;
+  const m = probe.measureText(text);
+  const l = m.actualBoundingBoxLeft, r = m.actualBoundingBoxRight;
+  const a = m.actualBoundingBoxAscent, dsc = m.actualBoundingBoxDescent;
+  const w = Math.ceil(l + r) + pad * 2;
+  const h = Math.ceil(a + dsc) + pad * 2;
+  const c = canvas(w, h);
+  const x = ctxOf(c);
+  x.font = `${weight} ${size}px ${FONT}`;
+  x.fillStyle = color;
+  x.fillText(text, pad + l, pad + a);
+  return { bytes: c, width: w, height: h };
+}
+function canvasToBytes(c) {
+  const url = c.toDataURL('image/png');
+  const bin = atob(url.split(',')[1]);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function roundRect(x, px, py, w, h, r, fill, stroke) {
+  x.beginPath();
+  x.roundRect ? x.roundRect(px, py, w, h, r) : x.rect(px, py, w, h);
+  if (fill) { x.fillStyle = fill; x.fill(); }
+  if (stroke) { x.strokeStyle = stroke; x.lineWidth = 1; x.stroke(); }
+}
+/** 课名按宽度折行：先 34px 一行，不行 29/26 两行，再不行 22 三行 */
+function wrapName(x, name, maxw) {
+  for (const [size, maxLines] of [[34, 1], [29, 2], [26, 2], [22, 3]]) {
+    x.font = `700 ${size}px ${FONT}`;
+    if (x.measureText(name).width <= maxw) return { lines: [name], size };
+    const lines = [];
+    let cur = '';
+    for (const ch of name) {
+      if (x.measureText(cur + ch).width <= maxw) cur += ch;
+      else { if (cur) lines.push(cur); cur = ch; }
+    }
+    if (cur) lines.push(cur);
+    if (lines.length <= maxLines) return { lines, size };
+  }
+  x.font = `700 22px ${FONT}`;
+  const lines = []; let cur = '';
+  for (const ch of name) {
+    if (x.measureText(cur + ch).width <= maxw) cur += ch;
+    else { lines.push(cur); cur = ch; }
+    if (lines.length === 2) break;
+  }
+  let rest = name.slice(lines.join('').length);
+  while (rest && x.measureText(rest + '…').width > maxw) rest = rest.slice(0, -1);
+  lines.push(rest + '…');
+  return { lines, size: 22 };
+}
+/** 课程卡 300×132 */
+function cardCanvas(course, color, highlight) {
+  const c = canvas(LAYOUT.cardW, LAYOUT.cardH), x = ctxOf(c);
+  x.fillStyle = color;
+  roundRect(x, 0, 0, LAYOUT.cardW, LAYOUT.cardH, 13, color);
+  roundRect(x, 4, 0, LAYOUT.cardW - 4, LAYOUT.cardH, 9, highlight ? CARD_HI : CARD,
+            highlight ? color : EDGE);
+  const tx = 100, maxw = LAYOUT.cardW - tx - 18;
+  const { lines, size } = wrapName(x, course.name, maxw);
+  const lh = size + 4, nameH = lines.length * lh;
+  const room = course.room || '';
+  const roomH = room ? 22 : 0;
+  const top = (LAYOUT.cardH - (nameH + roomH)) / 2 - 2;
+  x.font = `700 26px ${FONT}`; x.fillStyle = INK;
+  x.fillText(course.start, 13, top + 20);
+  x.font = `400 16px ${FONT}`; x.fillStyle = INK3;
+  x.fillText(course.end, 13, top + 56);
+  x.font = `700 ${size}px ${FONT}`; x.fillStyle = INK;
+  lines.forEach((ln, i) => x.fillText(ln, tx, top + size * 0.75 + i * lh));
+  if (room) { x.font = `400 18px ${FONT}`; x.fillStyle = INK2; x.fillText(room, tx, top + nameH + 18); }
+  if (highlight) { x.beginPath(); x.arc(LAYOUT.cardW - 20, 20, 5, 0, 7); x.fillStyle = color; x.fill(); }
+  return c;
+}
+function emptyCanvas(label) {
+  const c = canvas(LAYOUT.cardW, 120), x = ctxOf(c);
+  roundRect(x, 0, 0, LAYOUT.cardW, 120, 13, CARD);
+  x.textAlign = 'center'; x.fillStyle = INK2; x.font = `700 27px ${FONT}`;
+  x.fillText(label, LAYOUT.cardW / 2, 58);
+  x.fillStyle = INK3; x.font = `400 16px ${FONT}`;
+  x.fillText('好好休息', LAYOUT.cardW / 2, 92);
+  return c;
+}
+
+/* ---------------- 组装 + 打包 ---------------- */
+async function buildFace() {
+  const log = (s) => { const el = $('#log'); el.style.display = 'block'; el.textContent += s + '\n'; };
+  $('#log').textContent = '';
+  const t0 = performance.now();
+
+  if (!state.courses.length) throw new Error('还没加课程');
+
+  // 节次越界检查：删过节之后老课程可能指向不存在的节次
+  const validPeriods = new Set(state.periods.map((p) => p.no));
+  const badCourses = state.courses.filter((c) => c.periods.some((p) => !validPeriods.has(p)));
+  if (badCourses.length) {
+    log(`⚠️ ${badCourses.length} 门课的节次超出作息表，已就近归到最接近的一节：` +
+        badCourses.slice(0, 3).map((c) => c.name).join('、'));
+  }
+
+  // 1. 图元
+  const glyphs = {};
+  const addG = (key, text, weight, size, color, pad) => {
+    const g = glyphPNG(text, weight, size, color, pad);
+    glyphs[key] = g;
+    return g;
+  };
+  for (const d of '0123456789') addG('t' + d, d, 700, 76, INK, 2);
+  addG('tc', ':', 700, 60, INK3, 2);
+  for (const d of '0123456789') addG('d' + d, d, 500, 26, INK2, 1);
+  addG('y', '年', 500, 26, INK2, 1); addG('mo', '月', 500, 26, INK2, 1);
+  addG('dd', '日', 500, 26, INK2, 1); addG('wk', '周', 500, 26, INK2, 1);
+  addG('dot', '·', 500, 14, INK2, 1); addG('di', '第', 500, 22, INK3, 1);
+  {  // 窄间隔：纯黑 6px，看不见但占宽度
+    const g = canvas(6, 26), gx = ctxOf(g);
+    gx.fillStyle = '#000'; gx.fillRect(0, 0, 6, 26);
+    glyphs.sp = { bytes: g, width: 6, height: 26 };
+  }
+  addG('p_morning', '上午', 500, 26, INK3, 1);
+  addG('p_afternoon', '下午', 500, 26, INK3, 1);
+  addG('p_evening', '晚上', 500, 26, INK3, 1);
+  WEEK_CN.split('').forEach((w, i) => addG('w' + (i + 1), w, 500, 26, INK2, 1));
+  log(`图元 ${Object.keys(glyphs).length} 个`);
+  await new Promise((r) => setTimeout(r, 0));
+
+  // 2. 课程卡
+  const colors = Timetable.colorMap(state.courses);
+  const cards = [];
+  state.courses.forEach((c, i) => {
+    const t = Timetable.courseTime(c, state.periods);
+    const item = Object.assign({}, c, { start: t.start, end: t.end });
+    cards.push({ normal: cardCanvas(item, colors[i], false), hi: cardCanvas(item, colors[i], true) });
+    if ((i + 1) % 6 === 0) log(`课程卡 ${i + 1}/${state.courses.length}`);
+  });
+  log(`课程卡 ${state.courses.length} × 2（普通 + 高亮）`);
+  await new Promise((r) => setTimeout(r, 0));
+
+  // 3. 数据表
+  const widths = {};
+  Object.keys(glyphs).forEach((k) => { widths[k] = glyphs[k].width; });
+  const monday = Timetable.mondayOf(Timetable.parseDate(state.semesterStart));
+  const coursesForLua = state.courses.map((c, i) => {
+    const t = Timetable.courseTime(c, state.periods);
+    return {
+      weekday: Number(c.weekday), from: Timetable.minutes(t.start), to: Timetable.minutes(t.end),
+      normal: `c${i}.png`, hi: `c${i}h.png`, weeks: c.weeks || '1-16', name: c.name,
+    };
+  });
+  const dataLua = Timetable.buildDataLua({
+    monday: { y: monday.getFullYear(), m: monday.getMonth() + 1, d: monday.getDate() },
+    layout: LAYOUT, widths, courses: coursesForLua,
+  });
+  const mainLua = Timetable.buildMainLua(dataLua, LUA_LOGIC);
+
+  // 4. 预览图（336×480）
+  const pv = canvas(W, H), px = ctxOf(pv);
+  px.fillStyle = '#000'; px.fillRect(0, 0, W, H);
+  const now = new Date();
+  const week = Math.max(1, Timetable.weekOf(state.semesterStart, now));
+  const wd = (now.getDay() + 6) % 7 + 1;
+  const today = Timetable.lessonsOf(
+    { periods: state.periods, courses: state.courses }, wd, week);
+  const hh = now.getHours(), mm = now.getMinutes();
+  const nowMin = hh * 60 + mm;
+  // 时钟
+  const cstr = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  let cw = 0;
+  for (const ch of cstr) cw += (ch === ':' ? glyphs.tc : glyphs['t' + ch]).width;
+  let cx = (W - cw) / 2;
+  for (const ch of cstr) {
+    const g = ch === ':' ? glyphs.tc : glyphs['t' + ch];
+    px.drawImage(g.bytes, cx, LAYOUT.clockY);
+    cx += g.width;
+  }
+  // 日期行
+  const seq = [];
+  for (const ch of String(now.getFullYear())) seq.push('d' + ch);
+  seq.push('y');
+  for (const ch of String(now.getMonth() + 1)) seq.push('d' + ch);
+  seq.push('mo');
+  for (const ch of String(now.getDate())) seq.push('d' + ch);
+  seq.push('dd', 'wk', 'w' + wd, 'sp');   // 用窄间隔代替「·」
+  const phase = Timetable.phaseOf(nowMin);
+  seq.push('p_' + phase);
+  let dw = 0;
+  seq.forEach((k) => { dw += glyphs[k].width; });
+  let dx = (W - dw) / 2;
+  seq.forEach((k) => { px.drawImage(glyphs[k].bytes, dx, LAYOUT.dateY); dx += glyphs[k].width; });
+  // 右上角第 N 周
+  const wseq = ['di', ...String(week).split('').map((d) => 'd' + d), 'wk'];
+  let ww = 0; wseq.forEach((k) => { ww += glyphs[k].width; });
+  let wx = W - 16 - ww;
+  wseq.forEach((k) => { px.drawImage(glyphs[k].bytes, wx, 14); wx += glyphs[k].width; });
+  // 课程卡
+  const inPhase = today.filter((c) => c.phase === phase).slice(0, 2);
+  if (!inPhase.length) {
+    px.drawImage(emptyCanvas({ morning: '上午没课', afternoon: '下午没课', evening: '晚上没课' }[phase]),
+      LAYOUT.cardX, LAYOUT.card1Y);
+  } else {
+    inPhase.forEach((c, i) => {
+      const idx = c.idx;   // 用 lessonsOf 带回来的原始下标，同名同天也不会串
+      const live = nowMin >= c.from && nowMin < c.to;
+      px.drawImage(live ? cards[idx].hi : cards[idx].normal,
+        LAYOUT.cardX, i === 0 ? LAYOUT.card1Y : LAYOUT.card2Y);
+    });
+  }
+  const pvData = px.getImageData(0, 0, W, H);
+  $('#pv').src = pv.toDataURL('image/png');
+  log('预览已渲染');
+  await new Promise((r) => setTimeout(r, 0));
+
+  // 5. 打包
+  const resources = [{ name: 'lua/main.lua', bytes: new TextEncoder().encode(mainLua) }];
+  Object.keys(glyphs).sort().forEach((k) => {
+    resources.push({ name: 'lua/' + k + '.png', bytes: canvasToBytes(glyphs[k].bytes) });
+  });
+  cards.forEach((c, i) => {
+    resources.push({ name: `lua/c${i}.png`, bytes: canvasToBytes(c.normal) });
+    resources.push({ name: `lua/c${i}h.png`, bytes: canvasToBytes(c.hi) });
+  });
+  ['morning', 'afternoon', 'evening'].forEach((ph) => {
+    const label = { morning: '上午没课', afternoon: '下午没课', evening: '晚上没课' }[ph];
+    resources.push({ name: `lua/empty_${ph}.png`, bytes: canvasToBytes(emptyCanvas(label)) });
+  });
+  log(`资源 ${resources.length} 个，开始打包…`);
+
+  const face = FacePack.pack({
+    id: '167200916', name: '课表', resources,
+    preview: { rgba: pvData.data, width: W, height: H },
+  });
+  log(`✓ 打包完成 ${(face.length / 1024).toFixed(0)} KB，用时 ${Math.round(performance.now() - t0)} ms`);
+  return face;
+}
+
+function download(bytes, filename) {
+  const blob = new Blob([bytes], { type: 'application/octet-stream' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ---------------- 事件 ---------------- */
+$('#semesterStart').addEventListener('change', (e) => {
+  state.semesterStart = e.target.value || todayISO(); save(); renderForms();
+});
+$('#addCourse').addEventListener('click', () => {
+  state.courses.push({ name: '新课程', room: '', weekday: 1, periods: [1], weeks: '1-16' });
+  save(); renderForms();
+});
+$('#fillAll').addEventListener('click', () => {
+  state.courses.forEach((c) => { if (!c.weeks) c.weeks = '1-16'; });
+  save(); renderForms();
+});
+$('#addPeriod').addEventListener('click', () => {
+  const last = state.periods[state.periods.length - 1];
+  const start = last ? last.end : '08:00';
+  state.periods.push({ no: state.periods.length + 1, start,
+                       end: Timetable.addMinutes(start, 45) });
+  save(); renderForms();
+});
+$('#exportCfg').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '课表备份.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
+$('#importCfg').addEventListener('click', () => $('#cfgFile').click());
+$('#cfgFile').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    const o = JSON.parse(await f.text());
+    if (!o || !Array.isArray(o.courses) || !Array.isArray(o.periods)) throw new Error('格式不对');
+    state.semesterStart = o.semesterStart || state.semesterStart;
+    state.periods = o.periods;
+    state.courses = o.courses;
+    save(); renderForms();
+    $('#msg').textContent = `已导入 ${o.courses.length} 门课`;
+  } catch (err) {
+    $('#msg').textContent = '导入失败：' + (err.message || err);
+  }
+  e.target.value = '';
+});
+
+$('#gen').addEventListener('click', async () => {
+  const btn = $('#gen');
+  btn.disabled = true; btn.textContent = '生成中…';
+  try {
+    const face = await buildFace();
+    download(face, 'kebiao.face');
+    $('#msg').innerHTML = '<span class="done">✓ 已生成 kebiao.face，去「文件管理 → Download」里找到它，' +
+      '用 Gadgetbridge 打开 → Install</span>';
+  } catch (e) {
+    $('#log').style.display = 'block';
+    $('#log').textContent += '\n✗ ' + (e && e.message ? e.message : e);
+    $('#msg').textContent = '生成失败，看上面的日志';
+  } finally {
+    btn.disabled = false; btn.textContent = '生成表盘文件（.face）';
+  }
+});
+
+renderForms();
+
+/* 调试出口：方便自动化测试驱动同一套逻辑（生产环境无副作用） */
+window.__app = { state, buildFace, renderForms, LAYOUT, glyphPNG, cardCanvas, emptyCanvas };
+</script>
+</body>
+</html>

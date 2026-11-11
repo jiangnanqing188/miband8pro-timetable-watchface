@@ -29,3 +29,7 @@ __pycache__/
 
 # 由课表生成，不含真实数据
 wf/app/lua/data.lua
+
+# npm 测试依赖（本地装即可，见 README）
+wf/package.json
+wf/package-lock.json

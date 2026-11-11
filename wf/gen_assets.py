@@ -112,6 +112,10 @@ def make_glyphs():
         im, w, h = glyph(txt, "medium", size, INK3, pad=1)
         widths[key] = save(im, os.path.join(OUT_IMG, f"{key}.png"))
 
+    # 间隔图元：日期行里把「周三」和「上午」分开（纯黑，看不见但占宽度）
+    gap = Image.new("RGB", (6 * S, 26 * S), (0, 0, 0))
+    widths["sp"] = save(gap, os.path.join(OUT_IMG, "sp.png"))
+
     for i, c in enumerate(WEEK_CN, 1):
         im, w, h = glyph(c, "medium", 26, INK2, pad=1)
         widths[f"w{i}"] = save(im, os.path.join(OUT_IMG, f"w{i}.png"))

@@ -12,6 +12,27 @@ B 更强：时间、日期、教学周都是 `os.time()` 现算，能高亮"正�
 
 ---
 
+## 手机网页版（推荐，任何手机都能用）
+
+**https://jiangnanqing188.github.io/miband8pro-timetable-watchface/**
+
+手机浏览器打开就能用：填开学日期 → 填课表 → 点一下就生成 `.face` 表盘文件，
+再用 Gadgetbridge 装上。**不装 App、不连电脑、不上传任何数据**
+（课表存在浏览器本地，打包全在浏览器里跑）。
+
+源码在 `wf/jspack/`：`facepack.js` 是纯 JS 的 .face 打包器（与 Java 工具逐字节一致），
+`timetable.js` 是课表逻辑，`app-template.html` 是界面，`bundle.mjs` 打包成单文件。
+
+```bash
+node wf/jspack/bundle.mjs                       # 重新生成单文件 App
+node wf/jspack/test_timetable.mjs               # 课表逻辑 36 项
+node wf/jspack/test_pack.mjs                    # 打包器逐字节比对 8 项
+node wf/jspack/test_app.mjs                     # 端到端 27 项
+node wf/jspack/test_lua_from_face.mjs           # 把包里的 Lua 拿去真跑 9 项
+```
+
+---
+
 ## 三分钟上手
 
 ```bash
