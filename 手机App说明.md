@@ -1,9 +1,24 @@
 # 手机 App 使用说明
 
-一个 **43 KB 的 HTML 文件**：`out/kebiao-app.html`
+## 最省事：直接在手机上开这个网址
 
-手机浏览器打开就能用，不联网、不装 App、不连电脑。在里面填课表，
-点一下按钮，它自己打出一个 `kebiao.face` 表盘文件。
+**https://jiangnanqing188.github.io/miband8pro-timetable-watchface/**
+
+不用装 App、不用传文件、不用连电脑。打开就是录入界面，
+填完点一下，浏览器下载一个 `kebiao.face`，用 Gadgetbridge 装上就完事。
+
+> 页面上不联网、不上传任何数据：课表和生成过程全在浏览器本地完成。
+> 建议「添加到主屏幕」，之后就是个 App 图标。
+
+如果打不开这个网址（比如没有网络），也可以用下面的离线方式。
+
+---
+
+## 离线方式：用这个 HTML 文件
+
+一个 **47 KB 的 HTML 文件**：`out/kebiao-app.html`
+
+手机浏览器打开就能用，同样不联网、不装 App。
 
 ---
 
