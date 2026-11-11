@@ -42,6 +42,16 @@ td input,td select{height:38px;font-size:14px;padding:0 7px}
  background:linear-gradient(180deg,rgba(0,0,0,0),#000 40%);}
 .bar .inner{max-width:560px;margin:0 auto;display:flex;gap:10px}
 .done{color:var(--ok)}
+/* 窄屏（手机）：表格压紧，避免每列只剩一条缝 */
+@media (max-width: 430px){
+  body{padding:18px 10px 96px}
+  .card{padding:13px;border-radius:12px}
+  th{padding:0 3px 6px;font-size:11px}
+  td{padding:3px 3px}
+  td input,td select{height:40px;font-size:13.5px;padding:0 4px;border-radius:6px}
+  h1{font-size:20px}
+  .sub{font-size:12.5px;margin-bottom:16px}
+}
 </style>
 </head>
 <body>
