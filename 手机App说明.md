@@ -1,5 +1,19 @@
 # 手机 App 使用说明
 
+## 方式一：装 APK（真 App，推荐）
+
+**https://github.com/jiangnanqing188/miband8pro-timetable-watchface/releases/tag/v1.0**
+
+手机上打开上面的链接 → 下载 `kebiao-app.apk`（33 KB）→ 点开安装
+（提示「未知来源」时允许一次）→ 桌面出现「课表表盘」图标。
+
+App 里点「生成表盘文件」后，`kebiao.face` 会**直接存进系统「下载」目录**，
+不经过浏览器下载。之后用 Gadgetbridge 打开它 → Install。
+
+---
+
+## 方式二：手机浏览器开网址（不用装 App）
+
 ## 最省事：直接在手机上开这个网址
 
 **https://jiangnanqing188.github.io/miband8pro-timetable-watchface/**
