@@ -55,8 +55,14 @@ public class KebiaoBridge {
     }
 
     @JavascriptInterface
-    public void toast(String msg) {
-        Toast.makeText(act, msg, Toast.LENGTH_LONG).show();
+    public void toast(final String msg) {
+        // JS 桥接线程不是 UI 线程，Toast 必须切回去（这里刻意用匿名类，
+        // 用来验证 build-tools 36.1 的 d8 不再崩溃）
+        act.runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(act, msg, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @JavascriptInterface

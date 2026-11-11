@@ -4,7 +4,15 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 SDK="${SDK:-$(cd .. && pwd)/tools-sdk}"
-BT="$SDK/build-tools/34.0.0"
+# 自动挑最新 build-tools：34 的 d8(R8 8.2) 遇到 JDK 21+ 编译出的匿名类/lambda
+# 会内部 NPE 崩溃，36.1 起已修复
+BT_DIR=$(ls -d "$SDK"/build-tools/*/ 2>/dev/null | sort -V | tail -1)
+BT="${BT_DIR%/}"
+if [ -z "$BT" ]; then echo "没找到 build-tools，先跑：sdkmanager \"build-tools;36.1.0\""; exit 1; fi
+BT_VER=$(basename "$BT")
+case "$BT_VER" in
+  3[0-5].*) echo "⚠ 用的是 build-tools $BT_VER；它的 d8 处理匿名类会崩，建议装 36.1.0+";;
+esac
 JAR="$SDK/platforms/android-34/android.jar"
 JAVA_HOME="${JAVA_HOME:-/snap/pycharm-community/672/jbr}"
 JAVAC="$JAVA_HOME/bin/javac"
@@ -28,7 +36,7 @@ echo "③ 编译 Java"
   -d build/classes $(find src -name '*.java') 2>&1 | grep -v "bootstrap class path" || true
 ls build/classes/com/kebiao/watchface/*.class >/dev/null
 
-echo "④ dex"
+echo "④ dex（build-tools $BT_VER）"
 "$BT/d8" --lib "$JAR" --min-api 24 --output build/dex \
   $(find build/classes -name '*.class')
 
